@@ -30,7 +30,7 @@ public class SecurityConfig {
     UserDetailsService userDetailsService() {
         return new AppUserDetailService(this.userRepository);
     }
-
+ 
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
