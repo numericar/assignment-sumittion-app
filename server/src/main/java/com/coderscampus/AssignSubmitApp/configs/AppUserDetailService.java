@@ -26,7 +26,7 @@ public class AppUserDetailService implements UserDetailsService {
         Optional<User> userOptional = this.userRepository.findByUsername(username);
 
         if (userOptional.isEmpty()) {
-            throw new UsernameNotFoundException("User not found");
+            throw new UsernameNotFoundException("Invalid Credentials");
         } 
 
         User user = userOptional.get();
