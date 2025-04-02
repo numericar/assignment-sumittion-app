@@ -15,4 +15,7 @@ public interface JwtService {
     <T> T getClaims(String token, Function<Claims, T> claimsResolver);
     boolean isTokenExpiration(Date expireDate);
     String generateToken(UserDetails userDetails);
+    boolean canTokenRefreshed(String token);
+    boolean validateToken(String token, UserDetails userDetails);
+    boolean ignoreTokenExpire();
 }

@@ -1,10 +1,8 @@
 package com.coderscampus.AssignSubmitApp.services;
 
 import java.security.Key;
-import java.time.LocalDate;
+
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -13,8 +11,7 @@ import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.Jwts.SIG;
+import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JwtServiceImpl implements JwtService {
@@ -50,22 +47,41 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String generateToken(UserDetails userDetails) {
-        String token = Jwts.builder()
-            .claims()
-            .issuer("SYSTEM")
-            .issuedAt(new Date())
-            .subject(userDetails.getUsername())
-            .expiration(new Date(this.EXPIRE_IN))
-            .and()
-            .signWith((Key) SIG.HS512)
-            .compact();
+        Key secretKey = Keys.hmacShaKeyFor(this.secret.getBytes());
 
-        return token;
+        return Jwts.builder()
+                .claims()
+                .issuer("SYSTEM")
+                .issuedAt(new Date())
+                .subject(userDetails.getUsername())
+                .expiration(new Date(System.currentTimeMillis() + 3600000)) // หมดอายุใน 1 ชั่วโมง
+                .and()
+                .signWith(secretKey) // ✅ ไม่ต้องระบุ algorithm เพราะระบบจะทำการเลือก algorithm ให้เอง
+                .compact();
     }
 
     @Override
     public <T> T getClaims(String token, Function<Claims, T> claimsResolver) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getClaims'");
+    }
+
+    @Override
+    public boolean canTokenRefreshed(String token) {
+        Date expirationDate = this.getExpirationDate(token);
+        return (!this.isTokenExpiration(expirationDate) && ignoreTokenExpire());
+    }
+
+    @Override
+    public boolean validateToken(String token, UserDetails userDetails) {
+        final String username = this.getUsername(token);
+        Date expirationDate = this.getExpirationDate(token);
+
+        return (username.equals(userDetails.getUsername()) && !isTokenExpiration(expirationDate));
+    }
+
+    @Override
+    public boolean ignoreTokenExpire() {
+        return false;
     }
 }
